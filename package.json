@@ -37,8 +37,14 @@
     "vue-tsc": "^2.1.10"
   },
   "lint-staged": {
-    "src/**/*.{vue,ts,js,css,json}": ["prettier --write"],
-    "src/**/*.{vue,ts,js}": ["eslint --fix"],
-    "src-tauri/**/*.rs": ["cargo fmt --manifest-path src-tauri/Cargo.toml --"]
+    "**/*.{vue,ts,js,css,json}": [
+      "prettier --write"
+    ],
+    "src/**/*.{vue,ts,js}": [
+      "eslint --fix"
+    ],
+    "src-tauri/**/*.rs": [
+      "cargo fmt --manifest-path src-tauri/Cargo.toml --"
+    ]
   }
 }
