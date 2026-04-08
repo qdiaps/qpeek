@@ -7,26 +7,32 @@
 A modern, blazing fast cheat-sheet viewer built with Tauri and Vue.
 
 ## Sneak Peek
-*Screenshots and GIFs are coming soon...*
+
+_Screenshots and GIFs are coming soon..._
 
 ## Features
+
 - **Interactive Node Graph:** Renders your markdown files into a beautiful, infinite canvas using Vue Flow.
 - **Blazing Fast:** Built on Rust and Tauri for instant startup and minimal memory footprint.
 - **Zero-Config by Default:** Works perfectly out of the box, but is highly customizable.
 
-##  Roadmap (TODO)
+## Roadmap (TODO)
+
 - [ ] **Daemon-Client Architecture:** Background process for zero-latency window toggling.
 - [ ] **Hot-Reload:** Instantly updates the UI when the underlying markdown file is saved.
 - [ ] **Click-to-Copy:** One-click copying of code snippets directly from the graph.
 - [ ] **Dynamic Placeholders:** Support for variables in cheat-sheets.
 
 ## Installation
+
 Currently, `qpeek` is officially supported on **Linux**.
 
 ### Option 1: Pre-built Binaries
+
 Download the latest `.AppImage` or `.deb` from the [GitHub Releases](https://github.com/qdiaps/qpeek/releases) page.
 
 ### Option 2: Build from Source
+
 Ensure you have `Rust`, `Node.js` (v25+), `pnpm`, and `Docker` installed.
 
 ```bash
@@ -38,6 +44,7 @@ make docker-build
 ```
 
 ## Usage
+
 Simply pass a markdown file to the viewer:
 
 ```bash
@@ -45,10 +52,13 @@ qpeek my_cheatsheet.md
 ```
 
 ## Documentation
+
 Want to dive deeper? Check out our docs/ folder:
+
 - [CLI Reference](https://github.com/qdiaps/qpeek/docs/CLI.md) - Available commands and flags.
 - [Configuration](https://github.com/qdiaps/qpeek/docs/CONFIG.md) - How to customize the viewer.
 - [FAQ](https://github.com/qdiaps/qpeek/docs/FAQ.md) - Common questions and error fixes.
 
 ## License
+
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/qdiaps/qpeek/LICENSE) file for details.

@@ -1,7 +1,9 @@
 # Configuration
+
 `qpeek` is zero-config by default, but highly customizable. The configuration file is located at `~/.config/qpeek/config.json`.
 
 ## Default Configuration
+
 ```json
 {
   "theme": "system",
