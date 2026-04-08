@@ -36,7 +36,7 @@ Download the latest `.AppImage` or `.deb` from the [GitHub Releases](https://git
 Ensure you have `Rust`, `Node.js` (v25+), `pnpm`, and `Docker` installed.
 
 ```bash
-git clone [https://github.com/YOUR_USERNAME/qpeek.git](https://github.com/YOUR_USERNAME/qpeek.git)
+git clone [https://github.com/qdiaps/qpeek.git](https://github.com/qdiaps/qpeek.git)
 cd qpeek
 
 # Build an isolated Linux release binary using Docker
@@ -55,10 +55,10 @@ qpeek my_cheatsheet.md
 
 Want to dive deeper? Check out our docs/ folder:
 
-- [CLI Reference](https://github.com/qdiaps/qpeek/docs/CLI.md) - Available commands and flags.
-- [Configuration](https://github.com/qdiaps/qpeek/docs/CONFIG.md) - How to customize the viewer.
-- [FAQ](https://github.com/qdiaps/qpeek/docs/FAQ.md) - Common questions and error fixes.
+- [CLI Reference](https://github.com/qdiaps/qpeek/blob/master/docs/CLI.md) - Available commands and flags.
+- [Configuration](https://github.com/qdiaps/qpeek/blob/master/docs/CONFIG.md) - How to customize the viewer.
+- [FAQ](https://github.com/qdiaps/qpeek/blob/master/docs/FAQ.md) - Common questions and error fixes.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/qdiaps/qpeek/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/qdiaps/qpeek/blob/master/LICENSE) file for details.
