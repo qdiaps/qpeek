@@ -36,7 +36,7 @@ Download the latest `.AppImage` or `.deb` from the [GitHub Releases](https://git
 Ensure you have `Rust`, `Node.js` (v25+), `pnpm`, and `Docker` installed.
 
 ```bash
-git clone [https://github.com/qdiaps/qpeek.git](https://github.com/qdiaps/qpeek.git)
+git clone https://github.com/qdiaps/qpeek.git
 cd qpeek
 
 # Build an isolated Linux release binary using Docker
