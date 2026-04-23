@@ -76,6 +76,16 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(move |_app_handle, event| {
+            if let tauri::RunEvent::ExitRequested { api, .. } = event {
+                if is_daemon {
+                    api.prevent_exit();
+                    tracing::info!(target: "daemon", "Exit requested but prevented. Daemon stays in background.");
+                } else {
+                    tracing::info!(target: "ui", "App exit requested (Standalone mode). Terminating.");
+                }
+            }
+        })
 }
