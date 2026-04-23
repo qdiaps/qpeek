@@ -54,8 +54,15 @@ pub fn run() {
             }
 
             let window_clone = window.clone();
+            let is_daemon_event = is_daemon;
+
             window.on_window_event(move |event| {
                 if let WindowEvent::CloseRequested { api, .. } = event {
+                    if !is_daemon_event {
+                        tracing::info!(target: "ui", "Standalone app window closed. Exiting process.");
+                        return;
+                    }
+
                     if !config.eco_mode {
                         api.prevent_close();
                         window_clone.hide().unwrap();
