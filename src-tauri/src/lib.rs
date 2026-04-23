@@ -17,6 +17,13 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
+            tracing::info!(
+                target: "ipc",
+                "Received IPC signal from secondary instance. Args: {:?}",
+                argv
+            );
+        }))
         .invoke_handler(tauri::generate_handler![])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
