@@ -2,8 +2,9 @@ pub mod cli;
 pub mod logging;
 
 use cli::AppCli;
-use tauri::{Emitter, Manager, WindowEvent};
+use tauri::{Emitter, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
+#[derive(Clone, Copy)]
 struct AppConfig {
     eco_mode: bool,
     show_standalone_warning: bool,
@@ -17,15 +18,20 @@ pub fn run() {
     let is_daemon = args.daemon;
 
     let config = AppConfig {
-        eco_mode: false, // false = hide window, true = close window
+        eco_mode: false,
         show_standalone_warning: true,
     };
 
     if is_daemon {
         tracing::info!(target: "daemon", "Bootstrapping qpeek in Background/Daemon mode...");
     } else {
-        tracing::info!(target: "ui", "Bootstrapping qpeek in Standalone/Client mode...")
+        tracing::info!(target: "ui", "Bootstrapping qpeek in Standalone/Client mode...");
     }
+
+    let is_daemon_event = is_daemon;
+    let is_daemon_run = is_daemon;
+    let config_event = config;
+    let config_setup = config;
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -36,8 +42,35 @@ pub fn run() {
                 window.show().unwrap();
                 window.set_focus().unwrap();
                 tracing::info!(target: "ui", "Window invoked via IPC");
+            } else {
+                tracing::info!(target: "ui", "Re-creating window (Eco mode active)");
+                let new_window = WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+                    .title("qpeek")
+                    .inner_size(800.0, 600.0)
+                    .build()
+                    .unwrap();
+
+                new_window.set_focus().unwrap();
             }
         }))
+        .on_window_event(move |window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() != "main" { return; }
+
+                if !is_daemon_event {
+                    tracing::info!(target: "ui", "Standalone app window closed. Exiting process.");
+                    return;
+                }
+
+                if !config_event.eco_mode {
+                    api.prevent_close();
+                    window.hide().unwrap();
+                    tracing::info!(target: "ui", "Window hidden (Fast mode active)");
+                } else {
+                    tracing::info!(target: "ui", "Window closing (Eco mode active)");
+                }
+            }
+        })
         .setup(move |app| {
             let window = app.get_webview_window("main").unwrap();
 
@@ -47,31 +80,11 @@ pub fn run() {
                 window.show().unwrap();
                 window.set_focus().unwrap();
 
-                if config.show_standalone_warning {
+                if config_setup.show_standalone_warning {
                     tracing::warn!(target: "ui", "Standalone mode detected. Broadcasting warning to Vue.");
                     let _ = app.emit("standalone-warning", "Running without daemon may impact performance");
                 }
             }
-
-            let window_clone = window.clone();
-            let is_daemon_event = is_daemon;
-
-            window.on_window_event(move |event| {
-                if let WindowEvent::CloseRequested { api, .. } = event {
-                    if !is_daemon_event {
-                        tracing::info!(target: "ui", "Standalone app window closed. Exiting process.");
-                        return;
-                    }
-
-                    if !config.eco_mode {
-                        api.prevent_close();
-                        window_clone.hide().unwrap();
-                        tracing::info!(target: "ui", "Window hidden (Fast mode active)");
-                    } else {
-                        tracing::info!(target: "ui", "Window closing (Eco mode active)");
-                    }
-                }
-            });
 
             Ok(())
         })
@@ -80,12 +93,12 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(move |_app_handle, event| {
             if let tauri::RunEvent::ExitRequested { api, .. } = event {
-                if is_daemon {
+                if is_daemon_run {
                     api.prevent_exit();
                     tracing::info!(target: "daemon", "Exit requested but prevented. Daemon stays in background.");
                 } else {
                     tracing::info!(target: "ui", "App exit requested (Standalone mode). Terminating.");
                 }
             }
-        })
+        });
 }
