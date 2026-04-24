@@ -3,7 +3,7 @@ pub mod config;
 pub mod logging;
 
 use cli::AppCli;
-use config::AppConfig;
+use config::{AppConfig, spawn_watcher};
 use std::sync::{Arc, RwLock};
 use tauri::{Emitter, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
@@ -14,7 +14,11 @@ pub fn run() {
     let args = AppCli::parse_args();
     let is_daemon = args.daemon;
 
-    let mut app_config = AppConfig::load_or_create(args.config.map(std::path::PathBuf::from));
+    let config_path = args
+        .config
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(AppConfig::get_path);
+    let mut app_config = AppConfig::load_or_create(&config_path);
 
     if let Some(custom_vault) = args.vault {
         tracing::info!(target: "daemon", "Overriding vault path from CLI: {}", custom_vault);
@@ -31,6 +35,7 @@ pub fn run() {
 
     let config_event = Arc::clone(&config_state);
     let config_setup = Arc::clone(&config_state);
+    let watcher_state = Arc::clone(&config_state);
 
     let is_daemon_event = is_daemon;
     let is_daemon_run = is_daemon;
@@ -91,6 +96,8 @@ pub fn run() {
                     let _ = app.emit("standalone-warning", "Running without daemon may impact performance");
                 }
             }
+
+            spawn_watcher(app.handle().clone(), watcher_state, config_path);
 
             Ok(())
         })
