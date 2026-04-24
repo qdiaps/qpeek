@@ -101,10 +101,16 @@ pub fn spawn_watcher(app: tauri::AppHandle, state: Arc<RwLock<AppConfig>>, path:
                 .unwrap();
         }
 
+        let mut last_raw_content = fs::read_to_string(&path).unwrap_or_default();
+
         for res in rx {
             match res {
                 Ok(events) => {
                     if !events.iter().any(|e| e.path == path) {
+                        continue;
+                    }
+
+                    if !path.exists() {
                         continue;
                     }
 
@@ -115,6 +121,12 @@ pub fn spawn_watcher(app: tauri::AppHandle, state: Arc<RwLock<AppConfig>>, path:
                             continue;
                         }
                     };
+
+                    if content == last_raw_content {
+                        continue;
+                    }
+
+                    last_raw_content = content.clone();
 
                     let new_config = match serde_json::from_str::<AppConfig>(&content) {
                         Ok(c) => c,
