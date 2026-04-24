@@ -51,15 +51,17 @@ impl AppConfig {
             .expect("Could not determine config directory")
     }
 
-    pub fn load_or_create() -> Self {
-        let path = Self::get_path();
+    pub fn load_or_create(custom_path: Option<PathBuf>) -> Self {
+        let path = custom_path.unwrap_or_else(Self::get_path);
 
         if !path.exists() {
             info!(target: "fs", "Config file not found. Creating default at: {:?}", path);
             let config = Self::default();
-            config.save().unwrap_or_else(|e| {
-                warn!(target: "fs", "Failed to save default config: {}", e);
-            });
+            if let Some(parent) = path.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+            let json = serde_json::to_string_pretty(&config).unwrap_or_default();
+            let _ = fs::write(&path, json);
             return config;
         }
 
