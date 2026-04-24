@@ -108,11 +108,20 @@ pub fn spawn_watcher(app: tauri::AppHandle, state: Arc<RwLock<AppConfig>>, path:
                         continue;
                     }
 
-                    let Ok(content) = fs::read_to_string(&path) else {
-                        continue;
+                    let content = match fs::read_to_string(&path) {
+                        Ok(c) => c,
+                        Err(e) => {
+                            error!(target: "fs", "Failed to read config file during hot-reload: {}", e);
+                            continue;
+                        }
                     };
-                    let Ok(new_config) = serde_json::from_str::<AppConfig>(&content) else {
-                        continue;
+
+                    let new_config = match serde_json::from_str::<AppConfig>(&content) {
+                        Ok(c) => c,
+                        Err(e) => {
+                            warn!(target: "fs", "Config syntax error during hot-reload: {}. Keeping previous state.", e);
+                            continue;
+                        }
                     };
 
                     let is_different = if let Ok(lock) = state.read() {
