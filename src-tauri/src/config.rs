@@ -1,11 +1,10 @@
 use directories::{ProjectDirs, UserDirs};
-use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
-use tauri::{AppHandle, Emitter};
+use tauri::Emitter;
 use tracing::{error, info, warn};
 
 pub fn get_project_dirs() -> Option<ProjectDirs> {
@@ -25,7 +24,7 @@ fn default_vault_path() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("~/cheat-sheets"))
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AppConfig {
     #[serde(default = "default_eco_mode")]
     pub eco_mode: bool,
@@ -86,40 +85,50 @@ impl AppConfig {
     }
 }
 
-pub fn spawn_watcher(app: AppHandle, state: Arc<RwLock<AppConfig>>, path: PathBuf) {
+pub fn spawn_watcher(app: tauri::AppHandle, state: Arc<RwLock<AppConfig>>, path: PathBuf) {
     std::thread::spawn(move || {
         let (tx, rx) = std::sync::mpsc::channel();
-        let mut debouncer = new_debouncer(Duration::from_millis(300), tx).unwrap();
+        let mut debouncer =
+            notify_debouncer_mini::new_debouncer(Duration::from_millis(300), tx).unwrap();
 
         if let Some(parent) = path.parent() {
             debouncer
                 .watcher()
-                .watch(parent, RecursiveMode::NonRecursive)
+                .watch(
+                    parent,
+                    notify_debouncer_mini::notify::RecursiveMode::NonRecursive,
+                )
                 .unwrap();
         }
 
         for res in rx {
             match res {
                 Ok(events) => {
-                    let mut is_target_changed = false;
-                    for event in events {
-                        if event.path == path {
-                            is_target_changed = true;
-                            break;
-                        }
+                    if !events.iter().any(|e| e.path == path) {
+                        continue;
                     }
 
-                    if is_target_changed {
-                        let content = fs::read_to_string(&path).unwrap_or_default();
-                        if let Ok(new_config) = serde_json::from_str::<AppConfig>(&content) {
-                            info!(target: "fs", "Config file changed, hot-reloading...");
+                    let Ok(content) = fs::read_to_string(&path) else {
+                        continue;
+                    };
+                    let Ok(new_config) = serde_json::from_str::<AppConfig>(&content) else {
+                        continue;
+                    };
 
-                            if let Ok(mut lock) = state.write() {
-                                *lock = new_config.clone();
-                            }
+                    let is_different = if let Ok(lock) = state.read() {
+                        *lock != new_config
+                    } else {
+                        true
+                    };
 
-                            let _ = app.emit("config-hot-reload", new_config);
+                    if is_different {
+                        info!(target: "fs", "Config file changed, hot-reloading...");
+
+                        if let Ok(mut lock) = state.write() {
+                            *lock = new_config.clone();
                         }
+
+                        let _ = app.emit("config-hot-reload", new_config);
                     }
                 }
                 Err(e) => error!(target: "fs", "Watcher error: {:?}", e),
