@@ -23,3 +23,6 @@ serde_json = "1"
 clap = { version = "4.6", features = ["derive"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+directories = "6"
+notify = "8.1"
+notify-debouncer-mini = "0.6"
